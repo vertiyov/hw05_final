@@ -50,6 +50,7 @@ class URLTests(TestCase):
             (reverse('posts:post_edit',
                      kwargs={'post_id': self.post.pk}),
              f'/posts/{self.post.pk}/edit/'),
+            (reverse('posts:follow_index'), '/follow/'),
         ]
         for name, address in names_and_address:
             self.assertEqual(name, address)
