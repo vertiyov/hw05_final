@@ -185,23 +185,38 @@ class ViewsTests(TestCase):
         self.assertEqual(len(response.context['page_obj']),
                          posts_count_last_page)
 
-    def test_follow_user(self):
-        '''Проверка возможности подписаться'''
+    def test_follow_and_unfollow_user(self):
+        '''Проверка возможности подписаться и отписаться'''
         Follow.objects.all().delete()
+        follow_object = Follow.objects.create(
+            user=self.user, author=self.author
+        )
+        self.assertIn(follow_object, Follow.objects.all())
         self.authorized_client.get(reverse(
-            'posts:profile_follow', args=[self.follower.username]),
+            'posts:profile_unfollow', args=[self.author]),
             follow=True)
-        self.assertEqual(Follow.objects.count(), 1)
+        self.assertNotIn(follow_object, Follow.objects.all())
 
-    def test_unfollow_user(self):
-        '''Проверка возможности отписаться'''
-        self.authorized_client.get(reverse(
-            'posts:profile_follow', args=[self.follower.username]),
-            follow=True)
-        self.authorized_client.get(reverse(
-            'posts:profile_unfollow', args=[self.follower.username]),
-            follow=True)
-        self.assertEqual(Follow.objects.count(), 0)
+    def test_new_post_for_follower_true(self):
+        '''
+        Проверка наличия нового поста у подписчика
+        и отсутсвие поста у НЕ подписчика
+        '''
+        Follow.objects.create(
+            user=self.user, author=self.author
+        )
+        response = self.authorized_client.get(
+            reverse('posts:follow_index')
+        )
+        self.assertIn(self.post, response.context['page_obj'])
+
+        Follow.objects.all().delete()
+        response_after_unfollowing = self.authorized_client.get(
+            reverse('posts:follow_index')
+        )
+        self.assertNotIn(
+            self.post, response_after_unfollowing.context['page_obj']
+        )
 
     def test_cache(self):
         """Тестирование кэша главной страницыы"""
@@ -219,29 +234,3 @@ class ViewsTests(TestCase):
             reverse('posts:index')
         )
         self.assertNotEqual(posts, response.content)
-
-    def test_new_post_for_follower_true(self):
-        '''
-        Проверка наличия нового поста у подписчика
-        и отсутсвие поста у НЕ подписчика
-        '''
-        post = Post.objects.create(
-            author=self.author,
-            text='Новое тестовое сообщение',
-            group=self.group,
-        )
-        Follow.objects.create(
-            user=self.user, author=self.author
-        )
-        response = self.authorized_client.get(
-            reverse('posts:follow_index')
-        )
-        self.assertEqual(post, response.context['page_obj'][0])
-
-        Follow.objects.all().delete()
-        response_after_unfollowing = self.authorized_client.get(
-            reverse('posts:follow_index')
-        )
-        self.assertNotEqual(
-            post, response_after_unfollowing.context['page_obj']
-        )

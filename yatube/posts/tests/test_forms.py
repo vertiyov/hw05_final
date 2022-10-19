@@ -113,9 +113,15 @@ class CreateFormTests(TestCase):
                                      kwargs={'post_id': self.post.id}
                                      )
                              )
-        comments_after_add = Comment.objects.get(post=self.post.id)
+        comments_after_add = Comment.objects.first()
         self.assertEqual(
             comments_after_add.text, form['text']
+        )
+        self.assertEqual(
+            comments_after_add.post, self.post
+        )
+        self.assertEqual(
+            comments_after_add.author, self.author
         )
 
     def test_create_comment_anon(self):
@@ -137,6 +143,7 @@ class CreateFormTests(TestCase):
         self.assertEqual(Comment.objects.count(), 0)
         self.assertRedirects(
             response,
-            f'/auth/login/?next=/posts'
-            f'/{self.post.id}/comment/'
+            f"{reverse('users:login')}"
+            f"?next="
+            f"{reverse('posts:add_comment', kwargs={'post_id': self.post.id})}"
         )

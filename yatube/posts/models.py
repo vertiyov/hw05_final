@@ -80,7 +80,7 @@ class Comment(models.Model):
     )
 
     class Meta:
-        ordering = ['-created']
+        ordering = ('-created',)
 
     def __str__(self):
         return self.text[:15]
@@ -101,6 +101,11 @@ class Follow(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['user', 'author'], name='unique_follow'
-            )
+                name='unique_follow',
+                fields=['user', 'author'],
+            ),
+            models.CheckConstraint(
+                name="prevent_self_follow",
+                check=~models.Q(user=models.F("author"))
+            ),
         ]
