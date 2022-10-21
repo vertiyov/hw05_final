@@ -7,16 +7,16 @@ User = get_user_model()
 class Group(models.Model):
     title = models.CharField(
         max_length=200,
-        help_text="Введите название группы",
+        help_text='Введите название группы',
         verbose_name='Название группы'
     )
     slug = models.SlugField(
         unique=True,
-        help_text="Придумайте название ссылки",
+        help_text='Придумайте название ссылки',
         verbose_name='URL'
     )
     description = models.TextField(
-        help_text="Напишите описание к группе",
+        help_text='Напишите описание к группе',
         verbose_name='Описаине'
     )
 
@@ -27,7 +27,7 @@ class Group(models.Model):
 class Post(models.Model):
     LENGHT_STR_TEXT = 15
     text = models.TextField(
-        help_text="Что вы хотите рассказать?",
+        help_text='Что вы хотите рассказать?',
         verbose_name='Текст'
     )
     pub_date = models.DateTimeField(auto_now_add=True)
@@ -105,7 +105,7 @@ class Follow(models.Model):
                 fields=['user', 'author'],
             ),
             models.CheckConstraint(
-                name="prevent_self_follow",
-                check=~models.Q(user=models.F("author"))
+                name='prevent_self_follow',
+                check=~models.Q(user=models.F('author'))
             ),
         ]

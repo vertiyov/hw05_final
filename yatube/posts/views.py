@@ -5,7 +5,7 @@ from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import CommentForm, PostForm
-from .models import Comment, Follow, Group, Post
+from .models import Follow, Group, Post
 
 User = get_user_model()
 
@@ -46,9 +46,7 @@ def profile(request, username):
         'page_obj': paginate_posts(page_number, posts),
         'author': author,
         'following': (request.user.is_authenticated
-                      and Follow.objects.
-                      select_related('author', 'user').
-                      filter(author=author, user=request.user).exists())
+                      and author.following.filter(user=request.user).exists())
     }
     return render(request, 'posts/profile.html', context)
 
@@ -56,10 +54,9 @@ def profile(request, username):
 def post_detail(request, post_id):
     post = get_object_or_404(Post.objects.select_related(
         'author', 'group', ), pk=post_id)
-    comment = Comment.objects.select_related('post').filter(post=post_id)
     context = {
         'post': post,
-        'comments': comment,
+        'comments': post.comments.all(),
         'form': CommentForm()
     }
     return render(request, 'posts/post_detail.html', context)
@@ -140,7 +137,5 @@ def profile_follow(request, username):
 @login_required
 def profile_unfollow(request, username):
     author = get_object_or_404(User, username=username)
-    Follow.objects.select_related(
-        'user', 'author'
-    ).filter(user=request.user, author=author).delete()
-    return redirect("posts:profile", username=username)
+    Follow.objects.filter(user=request.user, author=author).delete()
+    return redirect('posts:profile', username=username)

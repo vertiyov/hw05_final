@@ -185,17 +185,30 @@ class ViewsTests(TestCase):
         self.assertEqual(len(response.context['page_obj']),
                          posts_count_last_page)
 
-    def test_follow_and_unfollow_user(self):
-        '''Проверка возможности подписаться и отписаться'''
+    def test_follow_user(self):
+        '''Проверка возможности подписаться'''
         Follow.objects.all().delete()
-        follow_object = Follow.objects.create(
+        self.authorized_client.get(
+            reverse('posts:profile_follow', args=[self.author]),
+            follow=True
+        )
+        self.assertTrue(
+            Follow.objects.filter(author=self.author, user=self.user).exists()
+        )
+
+    def test_unfollow_user(self):
+        '''Проверка возможности отписаться'''
+        Follow.objects.all().delete()
+        Follow.objects.create(
             user=self.user, author=self.author
         )
-        self.assertIn(follow_object, Follow.objects.all())
         self.authorized_client.get(reverse(
             'posts:profile_unfollow', args=[self.author]),
             follow=True)
-        self.assertNotIn(follow_object, Follow.objects.all())
+        self.assertFalse(
+            Follow.objects.filter(
+                author=self.author, user=self.user).exists()
+        )
 
     def test_new_post_for_follower_true(self):
         '''
