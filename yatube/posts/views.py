@@ -56,7 +56,8 @@ def post_detail(request, post_id):
         'author', 'group', ), pk=post_id)
     context = {
         'post': post,
-        'comments': post.comments.all(),
+        'comments': post.comments.select_related(
+            'author',),
         'form': CommentForm()
     }
     return render(request, 'posts/post_detail.html', context)
